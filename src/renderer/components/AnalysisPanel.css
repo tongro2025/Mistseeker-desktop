@@ -1,0 +1,167 @@
+.analysis-panel {
+  background: white;
+  border-top: 1px solid #e5e5e5;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 400px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e5e5e5;
+  background: #fafafa;
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.panel-title h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  color: #1a1a1a;
+}
+
+.progress-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.progress-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e5e5e5;
+  border-top-color: #007bff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.progress-text {
+  font-size: 13px;
+  color: rgba(226, 232, 240, 0.8);
+  font-weight: 500;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.auto-scroll-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: rgba(226, 232, 240, 0.7);
+  cursor: pointer;
+  user-select: none;
+}
+
+.auto-scroll-toggle input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.stop-btn {
+  background: rgba(239, 68, 68, 0.3);
+  color: #e2e8f0;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  backdrop-filter: blur(10px);
+}
+
+.stop-btn:hover {
+  background: rgba(239, 68, 68, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5);
+  border-color: rgba(239, 68, 68, 0.6);
+  color: #ffffff;
+}
+
+.logs-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  font-family: 'Courier New', 'Consolas', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.no-logs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: #888;
+  text-align: center;
+  padding: 40px;
+  height: 100%;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #333;
+  border-top-color: #007bff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.no-logs p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.logs-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.log-line {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 4px;
+  padding: 2px 0;
+}
+
+.log-time {
+  color: #888;
+  font-size: 11px;
+  flex-shrink: 0;
+  min-width: 80px;
+}
+
+.log-text {
+  flex: 1;
+  color: #d4d4d4;
+}
+
+.log-text:has-text("[Docker]") {
+  color: #4ec9b0;
+}
+
+.log-text:has-text("Error") {
+  color: #f48771;
+}

@@ -1,0 +1,204 @@
+.settings-panel {
+  background: rgba(30, 41, 59, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 32px;
+  max-width: 600px;
+  margin: 32px auto;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(102, 126, 234, 0.3);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.settings-header h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+  background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  color: rgba(226, 232, 240, 0.7);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  transform: rotate(90deg);
+}
+
+.settings-content {
+  margin-bottom: 24px;
+}
+
+.setting-item {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.setting-item label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.setting-description {
+  font-size: 13px;
+  color: rgba(226, 232, 240, 0.7);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.path-input-group {
+  display: flex;
+  gap: 10px;
+}
+
+.path-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'Courier New', monospace;
+  background: rgba(15, 23, 42, 0.8);
+  color: #e2e8f0;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.path-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+  background: rgba(15, 23, 42, 0.95);
+}
+
+.path-input::placeholder {
+  color: rgba(226, 232, 240, 0.5);
+}
+
+.browse-btn {
+  background: rgba(100, 116, 139, 0.3);
+  color: #e2e8f0;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(100, 116, 139, 0.3);
+  border: 1px solid rgba(100, 116, 139, 0.4);
+  backdrop-filter: blur(10px);
+}
+
+.browse-btn:hover {
+  background: rgba(100, 116, 139, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(100, 116, 139, 0.5);
+  border-color: rgba(100, 116, 139, 0.6);
+  color: #ffffff;
+}
+
+.path-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.reset-btn {
+  background: transparent;
+  color: #667eea;
+  border: 1px solid rgba(102, 126, 234, 0.4);
+  padding: 8px 16px;
+  font-size: 13px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.reset-btn:hover {
+  background: rgba(102, 126, 234, 0.2);
+  color: #ffffff;
+  border-color: #667eea;
+}
+
+.default-path-hint {
+  font-size: 12px;
+  color: rgba(226, 232, 240, 0.5);
+  font-family: 'Courier New', monospace;
+}
+
+.settings-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.save-btn {
+  background: rgba(34, 197, 94, 0.3);
+  color: #e2e8f0;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  backdrop-filter: blur(10px);
+}
+
+.save-btn:hover {
+  background: rgba(34, 197, 94, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.5);
+  border-color: rgba(34, 197, 94, 0.6);
+  color: #ffffff;
+}
+
+.cancel-btn {
+  background: rgba(100, 116, 139, 0.3);
+  color: #e2e8f0;
+  padding: 12px 24px;
+  font-size: 14px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(100, 116, 139, 0.3);
+  border: 1px solid rgba(100, 116, 139, 0.4);
+  backdrop-filter: blur(10px);
+}
+
+.cancel-btn:hover {
+  background: rgba(100, 116, 139, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(100, 116, 139, 0.5);
+  border-color: rgba(100, 116, 139, 0.6);
+  color: #ffffff;
+}
+

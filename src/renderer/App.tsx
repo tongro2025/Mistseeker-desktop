@@ -1,0 +1,228 @@
+import React, { useState, useEffect } from 'react';
+import './App.css';
+import Header from './components/Header';
+import DockerStatus from './components/DockerStatus';
+import ProjectSelector from './components/ProjectSelector';
+import AnalysisPanel from './components/AnalysisPanel';
+import ResultsViewer from './components/ResultsViewer';
+import { LicensePanel } from './components/LicensePanel';
+import SettingsPanel from './components/SettingsPanel';
+// Type definitions are automatically included
+
+interface DockerStatusType {
+  available: boolean;
+  error?: string;
+  version?: string;
+}
+
+interface LicenseStatus {
+  isValid: boolean;
+  type: 'free' | 'pro' | 'none';
+  expiresAt?: string;
+  features?: string[];
+}
+
+function App() {
+  const [dockerStatus, setDockerStatus] = useState<DockerStatusType | null>(null);
+  const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [imageName, setImageName] = useState<string>('tongro2025/mistseeker:latest');
+  const [activeAnalysisId, setActiveAnalysisId] = useState<string | null>(null);
+  const [analysisResults, setAnalysisResults] = useState<any>(null);
+  const [outputPath, setOutputPath] = useState<string | null>(null);
+  const [isCheckingDocker, setIsCheckingDocker] = useState(true);
+
+  // Startup: Check Docker availability
+  useEffect(() => {
+    checkDocker();
+  }, []);
+
+  useEffect(() => {
+    if (!activeAnalysisId) return;
+
+    // Set up event listeners for live logs
+    const handleLog = (id: string, log: string) => {
+      if (id === activeAnalysisId) {
+        // Logs are handled by AnalysisPanel
+      }
+    };
+
+    const handleComplete = async (id: string, results: any) => {
+      if (id === activeAnalysisId) {
+        // Get the output path from the analysis result
+        try {
+          const analysisResult = await window.electronAPI.getAnalysisResults(id);
+          if (analysisResult && analysisResult.config) {
+            setOutputPath(analysisResult.config.outputPath);
+          }
+        } catch (error) {
+          console.error('Failed to get output path:', error);
+        }
+        setAnalysisResults(results);
+        setActiveAnalysisId(null); // Analysis complete, allow new runs
+      }
+    };
+
+    const handleError = (id: string, error: string) => {
+      if (id === activeAnalysisId) {
+        console.error('Analysis error:', error);
+        setActiveAnalysisId(null); // Analysis failed, allow new runs
+      }
+    };
+
+    window.electronAPI.onAnalysisLog(handleLog);
+    window.electronAPI.onAnalysisComplete(handleComplete);
+    window.electronAPI.onAnalysisError(handleError);
+
+    return () => {
+      window.electronAPI.removeAllListeners('analysis-log');
+      window.electronAPI.removeAllListeners('analysis-complete');
+      window.electronAPI.removeAllListeners('analysis-error');
+    };
+  }, [activeAnalysisId]);
+
+  const checkDocker = async () => {
+    console.log('[App] checkDocker called');
+    setIsCheckingDocker(true);
+    try {
+      console.log('[App] Calling window.electronAPI.checkDocker()');
+      const status = await window.electronAPI.checkDocker();
+      console.log('[App] Docker status received:', status);
+      setDockerStatus(status);
+    } catch (error) {
+      console.error('[App] Error checking Docker:', error);
+      setDockerStatus({ available: false, error: 'Failed to check Docker status' });
+    } finally {
+      setIsCheckingDocker(false);
+    }
+  };
+
+  const handleSelectProject = async () => {
+    const path = await window.electronAPI.selectProjectFolder();
+    if (path) {
+      setSelectedProject(path);
+      setAnalysisResults(null); // Clear previous results
+    }
+  };
+
+  const handleProjectDropped = (path: string) => {
+    setSelectedProject(path);
+    setAnalysisResults(null);
+  };
+
+  const handleCodePaste = async (code: string) => {
+    // Create temporary project folder
+    try {
+      const tempPath = await window.electronAPI.createTempProjectFolder?.(code);
+      if (tempPath) {
+        setSelectedProject(tempPath);
+        setAnalysisResults(null);
+      }
+    } catch (error: any) {
+      alert(`Failed to create temporary project: ${error.message}`);
+    }
+  };
+
+  const handleRunScan = async () => {
+    console.log('Run Scan button clicked');
+    console.log('Selected project:', selectedProject);
+    console.log('Docker status:', dockerStatus);
+    console.log('Active analysis ID:', activeAnalysisId);
+    
+    if (!selectedProject) {
+      alert('Please select a project folder first');
+      return;
+    }
+
+    if (!dockerStatus?.available) {
+      alert('Docker is not available. Please check Docker Desktop.');
+      return;
+    }
+
+    // Prevent multiple concurrent runs
+    if (activeAnalysisId) {
+      alert('An analysis is already running. Please wait for it to complete.');
+      return;
+    }
+
+    try {
+      console.log('Starting analysis with config:', {
+        projectPath: selectedProject,
+        imageName: imageName,
+      });
+      
+      // Output path is automatically generated by the main process
+      const analysisId = await window.electronAPI.startAnalysis({
+        projectPath: selectedProject,
+        imageName: imageName,
+      });
+      
+      console.log('Analysis started with ID:', analysisId);
+      setActiveAnalysisId(analysisId);
+      setAnalysisResults(null);
+    } catch (error: any) {
+      console.error('Failed to start analysis:', error);
+      alert(`Failed to start analysis: ${error.message}`);
+    }
+  };
+
+  const handleStopAnalysis = async () => {
+    if (activeAnalysisId) {
+      await window.electronAPI.stopAnalysis(activeAnalysisId);
+      setActiveAnalysisId(null);
+    }
+  };
+
+  return (
+    <div className="app">
+      <Header />
+      <div className="app-content">
+        <div className="sidebar">
+          <DockerStatus 
+            status={dockerStatus} 
+            isChecking={isCheckingDocker}
+            onRefresh={checkDocker} 
+          />
+          <LicensePanel
+            onRegister={async (key) => {
+              const result = await window.electronAPI.registerLicense(key);
+              return result;
+            }}
+          />
+        </div>
+        <div className="main-content">
+          {!activeAnalysisId && !analysisResults && (
+            <ProjectSelector
+              selectedProject={selectedProject}
+              imageName={imageName}
+              onSelectProject={handleSelectProject}
+              onProjectDropped={handleProjectDropped}
+              onCodePaste={handleCodePaste}
+              onImageNameChange={setImageName}
+              onRunScan={handleRunScan}
+              dockerAvailable={dockerStatus?.available || false}
+            />
+          )}
+          {activeAnalysisId && (
+            <AnalysisPanel
+              analysisId={activeAnalysisId}
+              onStop={handleStopAnalysis}
+            />
+          )}
+          {analysisResults && (
+            <ResultsViewer 
+              results={analysisResults}
+              outputPath={outputPath || undefined}
+              onNewScan={() => {
+                setAnalysisResults(null);
+                setActiveAnalysisId(null);
+                setOutputPath(null);
+              }}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default App;
