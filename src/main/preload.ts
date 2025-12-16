@@ -27,7 +27,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('analysis-log', (_event, analysisId, log) => callback(analysisId, log));
   },
   
-  onAnalysisComplete: (callback: (analysisId: string, results: any) => void) => {
+  onAnalysisComplete: (callback: (analysisId: string, results: unknown) => void) => {
     ipcRenderer.on('analysis-complete', (_event, analysisId, results) => callback(analysisId, results));
   },
   

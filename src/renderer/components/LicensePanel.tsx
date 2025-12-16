@@ -48,8 +48,9 @@ const LicensePanel: React.FC<LicensePanelProps> = ({ onRegister }) => {
       } else {
         setError(result.error || 'Failed to register license');
       }
-    } catch (error: any) {
-      setError(error.message || 'Failed to register license');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      setError(errorMessage || 'Failed to register license');
     } finally {
       setIsRegistering(false);
     }
@@ -73,9 +74,10 @@ const LicensePanel: React.FC<LicensePanelProps> = ({ onRegister }) => {
             console.error('[LicensePanel] Failed to remove license:', result.error);
             alert(result.error || 'Failed to cancel license.');
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('[LicensePanel] Error removing license:', error);
-          alert(error.message || 'An error occurred while canceling license.');
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          alert(errorMessage || 'An error occurred while canceling license.');
         } finally {
           setIsRegistering(false);
         }

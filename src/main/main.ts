@@ -76,7 +76,7 @@ app.whenReady().then(() => {
   createWindow();
 
   // Set up analysis service event listeners
-  analysisService.on('analysis-complete', (analysisId: string, results: any) => {
+  analysisService.on('analysis-complete', (analysisId: string, results: unknown) => {
     console.log('[Main] Analysis complete event received:', analysisId);
     const analysisResult = analysisService.getResults(analysisId);
     if (analysisResult && analysisResult.config) {
@@ -197,8 +197,9 @@ ipcMain.handle('open-file', async (_event, filePath: string) => {
   try {
     await shell.openPath(filePath);
     return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return { success: false, error: errorMessage };
   }
 });
 
@@ -206,8 +207,9 @@ ipcMain.handle('open-folder', async (_event, folderPath: string) => {
   try {
     await shell.openPath(folderPath);
     return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return { success: false, error: errorMessage };
   }
 });
 
@@ -221,8 +223,9 @@ ipcMain.handle('create-temp-project-folder', async (_event, code: string) => {
     await fs.promises.writeFile(codeFile, code, 'utf-8');
     
     return tempDir;
-  } catch (error: any) {
-    throw new Error(`Failed to create temporary project folder: ${error.message}`);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to create temporary project folder: ${errorMessage}`);
   }
 });
 
@@ -249,8 +252,9 @@ ipcMain.handle('create-zip', async (_event, folderPath: string) => {
     }
     
     return zipPath;
-  } catch (error: any) {
-    throw new Error(`Failed to create ZIP file: ${error.message}`);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to create ZIP file: ${errorMessage}`);
   }
 });
 

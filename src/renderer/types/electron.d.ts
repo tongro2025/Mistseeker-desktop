@@ -18,9 +18,9 @@ export interface ElectronAPI {
   }) => Promise<string>;
   stopAnalysis: (analysisId: string) => Promise<boolean>;
   getAnalysisLogs: (analysisId: string) => Promise<string[]>;
-  getAnalysisResults: (analysisId: string) => Promise<any>;
+  getAnalysisResults: (analysisId: string) => Promise<unknown>;
   onAnalysisLog: (callback: (analysisId: string, log: string) => void) => void;
-  onAnalysisComplete: (callback: (analysisId: string, results: any) => void) => void;
+  onAnalysisComplete: (callback: (analysisId: string, results: unknown) => void) => void;
   onAnalysisError: (callback: (analysisId: string, error: string) => void) => void;
   removeAllListeners: (channel: string) => void;
   openFile?: (filePath: string) => Promise<{ success: boolean; error?: string }>;

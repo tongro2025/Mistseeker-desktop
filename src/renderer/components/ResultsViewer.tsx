@@ -18,7 +18,7 @@ interface ResultSummary {
   warnings?: number;
   scannedFiles?: number;
   scanDuration?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 const ResultsViewer: React.FC<ResultsViewerProps> = ({ results, outputPath, onNewScan }) => {
@@ -36,7 +36,7 @@ const ResultsViewer: React.FC<ResultsViewerProps> = ({ results, outputPath, onNe
         
         // Count total issues from files
         let totalIssues = 0;
-        files.forEach((file: any) => {
+        files.forEach((file: { issues_raw?: unknown[]; segments?: unknown[] }) => {
           if (file.issues_raw) totalIssues += file.issues_raw.length;
           if (file.segments) totalIssues += file.segments.length;
         });
@@ -44,7 +44,7 @@ const ResultsViewer: React.FC<ResultsViewerProps> = ({ results, outputPath, onNe
         setSummary({
           mode: data.mode || 'FREE',
           fileCount: summaryData.file_count || files.length || 0,
-          problemFileCount: summaryData.problem_file_count || files.filter((f: any) => f.problem).length || 0,
+          problemFileCount: summaryData.problem_file_count || files.filter((f: { problem?: boolean }) => f.problem).length || 0,
           totalIssues: totalIssues,
           scannedFiles: summaryData.file_count || files.length || 0,
           scores: summaryData.scores || {},
@@ -86,8 +86,9 @@ const ResultsViewer: React.FC<ResultsViewerProps> = ({ results, outputPath, onNe
         if (zipPath) {
           alert(`ZIP file created: ${zipPath}`);
         }
-      } catch (error: any) {
-        alert(`Failed to create ZIP: ${error.message}`);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        alert(`Failed to create ZIP: ${errorMessage}`);
       }
     }
   };

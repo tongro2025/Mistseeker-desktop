@@ -112,10 +112,11 @@ export class LicenseService {
           error: response.data.error || response.data.message || 'Invalid server response format',
         };
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error registering license:', error);
+      const errorObj = error as { code?: string; message?: string };
       
-      if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+      if (errorObj.code === 'ECONNREFUSED' || errorObj.code === 'ETIMEDOUT') {
         return {
           success: false,
           error: 'Cannot connect to license server. Please check your internet connection.',

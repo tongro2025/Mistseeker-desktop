@@ -19,7 +19,7 @@ function App() {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [imageName, setImageName] = useState<string>('tongro2025/mistseeker:latest');
   const [activeAnalysisId, setActiveAnalysisId] = useState<string | null>(null);
-  const [analysisResults, setAnalysisResults] = useState<any>(null);
+  const [analysisResults, setAnalysisResults] = useState<unknown>(null);
   const [outputPath, setOutputPath] = useState<string | null>(null);
   const [isCheckingDocker, setIsCheckingDocker] = useState(true);
 
@@ -37,7 +37,7 @@ function App() {
       // Logs are handled by AnalysisPanel
     };
 
-    const handleComplete = async (id: string, results: any) => {
+    const handleComplete = async (id: string, results: unknown) => {
       if (id === activeAnalysisId) {
         // Get the output path from the analysis result
         try {
@@ -104,8 +104,9 @@ function App() {
         setSelectedProject(tempPath);
         setAnalysisResults(null);
       }
-    } catch (error: any) {
-      alert(`Failed to create temporary project: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      alert(`Failed to create temporary project: ${errorMessage}`);
     }
   };
 
@@ -146,9 +147,10 @@ function App() {
       console.log('Analysis started with ID:', analysisId);
       setActiveAnalysisId(analysisId);
       setAnalysisResults(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to start analysis:', error);
-      alert(`Failed to start analysis: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      alert(`Failed to start analysis: ${errorMessage}`);
     }
   };
 

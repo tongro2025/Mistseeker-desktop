@@ -190,12 +190,13 @@ export class AnalysisService extends EventEmitter {
       // Clean up
       this.activeContainers.delete(analysisId);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       analysis.status = 'failed';
-      analysis.error = error.message;
+      analysis.error = errorMessage;
       analysis.endTime = new Date();
-      this.addLog(analysisId, `[Error] ${error.message}`);
-      this.emit('analysis-error', analysisId, error.message);
+      this.addLog(analysisId, `[Error] ${errorMessage}`);
+      this.emit('analysis-error', analysisId, errorMessage);
       
       // Clean up container on error (just Docker commands)
       if (containerName) {
@@ -231,8 +232,9 @@ export class AnalysisService extends EventEmitter {
         analysis.endTime = new Date();
         this.addLog(analysisId, '[Info] Analysis stopped by user');
         return true;
-      } catch (error: any) {
-        this.addLog(analysisId, `[Error] Failed to stop: ${error.message}`);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        this.addLog(analysisId, `[Error] Failed to stop: ${errorMessage}`);
         return false;
       }
     }
@@ -368,8 +370,9 @@ export class AnalysisService extends EventEmitter {
       if (!results.json && !results.pdf) {
         errors.push(`No output files found. Expected result.json and/or report.pdf in output directory: ${outputPath}`);
       }
-    } catch (error: any) {
-      errors.push(`Error reading output files: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      errors.push(`Error reading output files: ${errorMessage}`);
       console.error('[Analysis] Error reading output files:', error);
     }
 

@@ -78,9 +78,10 @@ export class DockerService {
       
       this.dockerAvailable = true;
       return { available: true, version };
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.dockerAvailable = false;
-      const errorMessage = error.message || error.stderr || 'Docker is not available';
+      const errorObj = error as { message?: string; stderr?: string };
+      const errorMessage = errorObj?.message || errorObj?.stderr || 'Docker is not available';
       
       if (errorMessage.includes('Cannot connect') || 
           errorMessage.includes('ECONNREFUSED') ||
@@ -309,7 +310,7 @@ export class DockerService {
       const testFile = path.join(config.outputPath, '.write-test');
       fs.writeFileSync(testFile, 'test');
       fs.unlinkSync(testFile);
-    } catch (error: any) {
+    } catch (error: unknown) {
       const errorMsg = `Output path is not writable: ${config.outputPath}`;
       if (onStderr) {
         onStderr(`[Error] ${errorMsg}\n`);
@@ -328,8 +329,9 @@ export class DockerService {
         if (onStdout) {
           onStdout(`[Docker] Image ${config.imageName} pulled successfully.\n`);
         }
-      } catch (error: any) {
-        const errorMsg = `Failed to pull Docker image ${config.imageName}: ${error.message}`;
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorMsg = `Failed to pull Docker image ${config.imageName}: ${errorMessage}`;
         if (onStderr) {
           onStderr(`[Error] ${errorMsg}\n`);
         } else if (onStdout) {
@@ -503,10 +505,11 @@ export class DockerService {
 
     try {
       await execAsync(command);
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Container might already be stopped
-      if (!error.message.includes('No such container') && 
-          !error.message.includes('is not running')) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (!errorMessage.includes('No such container') && 
+          !errorMessage.includes('is not running')) {
         throw error;
       }
     } finally {
@@ -523,9 +526,10 @@ export class DockerService {
 
     try {
       await execAsync(command);
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Container might already be removed
-      if (!error.message.includes('No such container')) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (!errorMessage.includes('No such container')) {
         throw error;
       }
     } finally {
@@ -569,8 +573,9 @@ export class DockerService {
     try {
       const { stdout, stderr } = await execAsync(command);
       return stdout + stderr;
-    } catch (error: any) {
-      throw new Error(`Failed to get container logs: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to get container logs: ${errorMessage}`);
     }
   }
 
