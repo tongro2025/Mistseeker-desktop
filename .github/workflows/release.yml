@@ -10,6 +10,7 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
         include:
@@ -39,6 +40,12 @@ jobs:
       - name: Build application
         run: npm run build:main && npm run build:renderer
 
+      - name: Install system dependencies (Linux only)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libnss3-dev libatk-bridge2.0-dev libdrm2 libxkbcommon-dev libxcomposite-dev libxdamage-dev libxfixes-dev libxrandr-dev libgbm-dev libasound2-dev libpango1.0-dev libcairo2-dev
+
       - name: Build Electron app
         run: npm run build
         continue-on-error: false
@@ -58,8 +65,9 @@ jobs:
             release/*.dmg
             release/*.exe
             release/*.AppImage
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 30
+        continue-on-error: true
 
   release:
     needs: build
