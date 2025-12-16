@@ -112,7 +112,7 @@ export class AnalysisService extends EventEmitter {
       console.log('[Analysis] License check:');
       console.log('  hasLicense():', hasLicense);
       console.log('  licenseFilePath:', licenseFilePath);
-      console.log('  license file exists:', require('fs').existsSync(licenseFilePath));
+      console.log('  license file exists:', fs.existsSync(licenseFilePath));
       
       if (hasLicense) {
         licensePath = licenseFilePath;

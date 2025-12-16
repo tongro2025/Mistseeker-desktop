@@ -1,11 +1,10 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import './ProjectSelector.css';
 
 interface ProjectSelectorProps {
   selectedProject: string | null;
   imageName: string;
   onSelectProject: () => void;
-  onProjectDropped: (path: string) => void;
   onCodePaste: (code: string) => void;
   onImageNameChange: (name: string) => void;
   onRunScan: () => void;
@@ -16,7 +15,6 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
   selectedProject,
   imageName,
   onSelectProject,
-  onProjectDropped,
   onCodePaste,
   onImageNameChange,
   onRunScan,
@@ -25,7 +23,6 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [showCodePaste, setShowCodePaste] = useState(false);
   const [pastedCode, setPastedCode] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();

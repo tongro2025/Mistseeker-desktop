@@ -65,7 +65,7 @@ export class DockerService {
       const dockerCmd = getDockerCommand();
       
       // Just run docker info
-      const { stdout, stderr } = await execAsync(`${dockerCmd} info`);
+      await execAsync(`${dockerCmd} info`);
       
       // Get version
       let version: string | undefined;

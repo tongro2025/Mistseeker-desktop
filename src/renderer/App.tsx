@@ -6,20 +6,12 @@ import ProjectSelector from './components/ProjectSelector';
 import AnalysisPanel from './components/AnalysisPanel';
 import ResultsViewer from './components/ResultsViewer';
 import { LicensePanel } from './components/LicensePanel';
-import SettingsPanel from './components/SettingsPanel';
 // Type definitions are automatically included
 
 interface DockerStatusType {
   available: boolean;
   error?: string;
   version?: string;
-}
-
-interface LicenseStatus {
-  isValid: boolean;
-  type: 'free' | 'pro' | 'none';
-  expiresAt?: string;
-  features?: string[];
 }
 
 function App() {
@@ -40,10 +32,9 @@ function App() {
     if (!activeAnalysisId) return;
 
     // Set up event listeners for live logs
-    const handleLog = (id: string, log: string) => {
-      if (id === activeAnalysisId) {
-        // Logs are handled by AnalysisPanel
-      }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const handleLog = (_id: string, _log: string) => {
+      // Logs are handled by AnalysisPanel
     };
 
     const handleComplete = async (id: string, results: any) => {
@@ -104,10 +95,6 @@ function App() {
     }
   };
 
-  const handleProjectDropped = (path: string) => {
-    setSelectedProject(path);
-    setAnalysisResults(null);
-  };
 
   const handleCodePaste = async (code: string) => {
     // Create temporary project folder
@@ -195,7 +182,6 @@ function App() {
               selectedProject={selectedProject}
               imageName={imageName}
               onSelectProject={handleSelectProject}
-              onProjectDropped={handleProjectDropped}
               onCodePaste={handleCodePaste}
               onImageNameChange={setImageName}
               onRunScan={handleRunScan}
