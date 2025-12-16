@@ -188,16 +188,40 @@ EOF
           echo "zip_file=${ZIP_NAME}" >> $GITHUB_OUTPUT
           echo "Created ${ZIP_NAME} (${FILE_COUNT} files)"
 
+      - name: Prepare release files list
+        id: prepare_files
+        run: |
+          FILES=""
+          if [ -n "${{ steps.find_files.outputs.mac_file }}" ] && [ -f "${{ steps.find_files.outputs.mac_file }}" ]; then
+            FILES="${FILES}${{ steps.find_files.outputs.mac_file }}\n"
+          fi
+          if [ -n "${{ steps.find_files.outputs.win_file }}" ] && [ -f "${{ steps.find_files.outputs.win_file }}" ]; then
+            FILES="${FILES}${{ steps.find_files.outputs.win_file }}\n"
+          fi
+          if [ -n "${{ steps.find_files.outputs.linux_file }}" ] && [ -f "${{ steps.find_files.outputs.linux_file }}" ]; then
+            FILES="${FILES}${{ steps.find_files.outputs.linux_file }}\n"
+          fi
+          if [ -n "${{ steps.create_zip.outputs.zip_file }}" ] && [ -f "${{ steps.create_zip.outputs.zip_file }}" ]; then
+            FILES="${FILES}${{ steps.create_zip.outputs.zip_file }}\n"
+          fi
+          
+          echo "Files to upload:"
+          echo -e "$FILES"
+          
+          # Save to file for use in next step
+          echo -e "$FILES" > files_to_upload.txt
+          
+          if [ -z "$FILES" ]; then
+            echo "ERROR: No files to upload!"
+            exit 1
+          fi
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.get_version.outputs.VERSION }}
           name: Release ${{ steps.get_version.outputs.VERSION }}
-          files: |
-            ${{ steps.find_files.outputs.mac_file }}
-            ${{ steps.find_files.outputs.win_file }}
-            ${{ steps.find_files.outputs.linux_file }}
-            ${{ steps.create_zip.outputs.zip_file }}
+          files: files_to_upload.txt
           draft: false
           prerelease: false
           fail_on_unmatched_files: false
