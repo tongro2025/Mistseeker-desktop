@@ -37,37 +37,80 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build application
-        run: npm run build:main && npm run build:renderer
+      - name: Build TypeScript and React
+        run: |
+          echo "Building main process..."
+          npm run build:main
+          echo "Building renderer process..."
+          npm run build:renderer
+          echo "Build completed successfully"
+
+      - name: Verify build output
+        run: |
+          echo "=== Checking dist directory ==="
+          ls -lah dist/ || echo "dist/ directory not found"
+          echo ""
+          echo "=== Checking dist/main ==="
+          ls -lah dist/main/ || echo "dist/main/ not found"
+          echo ""
+          echo "=== Checking dist/renderer ==="
+          ls -lah dist/renderer/ || echo "dist/renderer/ not found"
+          echo ""
+          echo "=== Checking for main.js ==="
+          find dist -name "main.js" -o -name "main.js.map" || echo "main.js not found"
 
       - name: Install system dependencies (Linux only)
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libnss3-dev libatk-bridge2.0-dev libdrm2 libxkbcommon-dev libxcomposite-dev libxdamage-dev libxfixes-dev libxrandr-dev libgbm-dev libasound2-dev libpango1.0-dev libcairo2-dev
+          sudo apt-get install -y \
+            libnss3-dev \
+            libatk-bridge2.0-dev \
+            libdrm2 \
+            libxkbcommon-dev \
+            libxcomposite-dev \
+            libxdamage-dev \
+            libxfixes-dev \
+            libxrandr-dev \
+            libgbm-dev \
+            libasound2-dev \
+            libpango1.0-dev \
+            libcairo2-dev
 
-      - name: Build Electron app
-        run: npm run build
-        continue-on-error: false
-
-      - name: List release directory
+      - name: Build Electron app (without publish)
         run: |
-          echo "=== Release directory contents ==="
-          ls -lah release/ || echo "Release directory does not exist"
-          find release -type f -name "*.${{ matrix.extension }}" || echo "No ${{ matrix.extension }} files found"
+          echo "Starting electron-builder..."
+          # Remove publish config temporarily to avoid auto-publish
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            const originalPublish = pkg.build.publish;
+            delete pkg.build.publish;
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+            console.log('Temporarily removed publish config');
+          "
+          # Build for current platform only
+          npm run build:main && npm run build:renderer && npx electron-builder --${{ matrix.platform }} --config.publish=null
+          echo "Build completed"
+
+      - name: List release files
+        run: |
+          echo "=== Release directory ==="
+          ls -lah release/ 2>/dev/null || echo "Release directory does not exist"
+          echo ""
+          echo "=== All files in release ==="
+          find release -type f 2>/dev/null || echo "No files found"
+          echo ""
+          echo "=== Files matching extension ==="
+          find release -name "*.${{ matrix.extension }}" 2>/dev/null || echo "No ${{ matrix.extension }} files found"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.platform }}-${{ matrix.extension }}
-          path: |
-            release/*.${{ matrix.extension }}
-            release/*.dmg
-            release/*.exe
-            release/*.AppImage
+          name: ${{ matrix.platform }}-build
+          path: release/
           if-no-files-found: warn
           retention-days: 30
-        continue-on-error: true
 
   release:
     needs: build
@@ -83,63 +126,52 @@ jobs:
         with:
           path: artifacts
 
-      - name: List all downloaded files
+      - name: List downloaded artifacts
         run: |
-          echo "=== All artifacts ==="
+          echo "=== Artifacts structure ==="
           find artifacts -type f || echo "No files found"
           echo ""
-          echo "=== Directory structure ==="
-          find artifacts -type d || true
-          echo ""
-          echo "=== Files by type ==="
-          find artifacts -name "*.dmg" || echo "No .dmg files"
-          find artifacts -name "*.exe" || echo "No .exe files"
-          find artifacts -name "*.AppImage" || echo "No .AppImage files"
+          echo "=== Directory listing ==="
+          ls -laR artifacts/ || echo "Cannot list artifacts"
 
       - name: Extract version from tag
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
-      - name: Find and copy release files
-        id: prepare_files
+      - name: Collect release files
+        id: collect_files
         run: |
           mkdir -p release_files
           
-          # Find and copy files
-          MAC_FILE=$(find artifacts -name "*.dmg" -type f | head -1)
-          WIN_FILE=$(find artifacts -name "*.exe" -type f | head -1)
-          LINUX_FILE=$(find artifacts -name "*.AppImage" -type f | head -1)
+          # Find files recursively
+          MAC_FILE=$(find artifacts -name "*.dmg" -type f 2>/dev/null | head -1)
+          WIN_FILE=$(find artifacts -name "*.exe" -type f 2>/dev/null | head -1)
+          LINUX_FILE=$(find artifacts -name "*.AppImage" -type f 2>/dev/null | head -1)
           
-          if [ -n "$MAC_FILE" ]; then
+          echo "Found files:"
+          echo "  macOS: ${MAC_FILE:-NOT FOUND}"
+          echo "  Windows: ${WIN_FILE:-NOT FOUND}"
+          echo "  Linux: ${LINUX_FILE:-NOT FOUND}"
+          
+          # Copy files if found
+          if [ -n "$MAC_FILE" ] && [ -f "$MAC_FILE" ]; then
             cp "$MAC_FILE" release_files/
             echo "mac_file=release_files/$(basename "$MAC_FILE")" >> $GITHUB_OUTPUT
-            echo "Found macOS file: $MAC_FILE"
-          else
-            echo "mac_file=" >> $GITHUB_OUTPUT
-            echo "WARNING: No macOS file found"
           fi
           
-          if [ -n "$WIN_FILE" ]; then
+          if [ -n "$WIN_FILE" ] && [ -f "$WIN_FILE" ]; then
             cp "$WIN_FILE" release_files/
             echo "win_file=release_files/$(basename "$WIN_FILE")" >> $GITHUB_OUTPUT
-            echo "Found Windows file: $WIN_FILE"
-          else
-            echo "win_file=" >> $GITHUB_OUTPUT
-            echo "WARNING: No Windows file found"
           fi
           
-          if [ -n "$LINUX_FILE" ]; then
+          if [ -n "$LINUX_FILE" ] && [ -f "$LINUX_FILE" ]; then
             cp "$LINUX_FILE" release_files/
             echo "linux_file=release_files/$(basename "$LINUX_FILE")" >> $GITHUB_OUTPUT
-            echo "Found Linux file: $LINUX_FILE"
-          else
-            echo "linux_file=" >> $GITHUB_OUTPUT
-            echo "WARNING: No Linux file found"
           fi
           
           echo ""
-          echo "=== Files in release_files directory ==="
-          ls -lah release_files/ || echo "No files copied"
+          echo "=== Files ready for release ==="
+          ls -lah release_files/ || echo "No files collected"
 
       - name: Create ZIP archive
         id: create_zip
@@ -147,49 +179,42 @@ jobs:
           VERSION=${{ steps.get_version.outputs.VERSION }}
           ZIP_NAME="MistSeeker-Desktop-${VERSION}-all-platforms.zip"
           
-          if [ -d release_files ] && [ "$(ls -A release_files)" ]; then
+          if [ -d release_files ] && [ "$(ls -A release_files 2>/dev/null)" ]; then
             cd release_files
-            zip -r "../${ZIP_NAME}" .
+            zip -r "../${ZIP_NAME}" . 2>/dev/null || echo "ZIP creation failed"
             cd ..
-            echo "zip_file=${ZIP_NAME}" >> $GITHUB_OUTPUT
-            echo "Created ${ZIP_NAME}"
+            if [ -f "$ZIP_NAME" ]; then
+              echo "zip_file=$ZIP_NAME" >> $GITHUB_OUTPUT
+              echo "Created $ZIP_NAME"
+            fi
           else
-            echo "zip_file=" >> $GITHUB_OUTPUT
-            echo "WARNING: No files to zip"
+            echo "No files to zip"
           fi
 
-      - name: Prepare release files list
-        id: prepare_release
+      - name: Prepare files list
+        id: prepare_list
         run: |
-          FILES=""
-          if [ -n "${{ steps.prepare_files.outputs.mac_file }}" ] && [ -f "${{ steps.prepare_files.outputs.mac_file }}" ]; then
-            FILES="${FILES}${{ steps.prepare_files.outputs.mac_file }}\n"
-          fi
-          if [ -n "${{ steps.prepare_files.outputs.win_file }}" ] && [ -f "${{ steps.prepare_files.outputs.win_file }}" ]; then
-            FILES="${FILES}${{ steps.prepare_files.outputs.win_file }}\n"
-          fi
-          if [ -n "${{ steps.prepare_files.outputs.linux_file }}" ] && [ -f "${{ steps.prepare_files.outputs.linux_file }}" ]; then
-            FILES="${FILES}${{ steps.prepare_files.outputs.linux_file }}\n"
-          fi
-          if [ -n "${{ steps.create_zip.outputs.zip_file }}" ] && [ -f "${{ steps.create_zip.outputs.zip_file }}" ]; then
-            FILES="${FILES}${{ steps.create_zip.outputs.zip_file }}\n"
-          fi
-          
-          echo "Files to upload:"
-          echo -e "$FILES"
-          
-          # Remove trailing newline and save
-          echo -e "$FILES" | sed '/^$/d' > release_files_list.txt
-          
-          echo "=== Release files list ==="
-          cat release_files_list.txt
+          cat > files.txt << EOF
+          ${{ steps.collect_files.outputs.mac_file }}
+          ${{ steps.collect_files.outputs.win_file }}
+          ${{ steps.collect_files.outputs.linux_file }}
+          ${{ steps.create_zip.outputs.zip_file }}
+          EOF
+          # Remove empty lines
+          sed -i '/^$/d' files.txt
+          echo "=== Files to upload ==="
+          cat files.txt
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.get_version.outputs.VERSION }}
           name: Release ${{ steps.get_version.outputs.VERSION }}
-          files: release_files_list.txt
+          files: |
+            ${{ steps.collect_files.outputs.mac_file }}
+            ${{ steps.collect_files.outputs.win_file }}
+            ${{ steps.collect_files.outputs.linux_file }}
+            ${{ steps.create_zip.outputs.zip_file }}
           draft: false
           prerelease: false
           fail_on_unmatched_files: false
