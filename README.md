@@ -37,13 +37,19 @@ MistSeeker Desktop is **NOT** a code analysis engine itself. It is a desktop app
 
 ### 🚀 Quick Download
 
-Click the button below to download the latest release for your platform:
+[![Download Latest Release](https://img.shields.io/badge/Download-Latest_Release-blue?style=for-the-badge)](https://github.com/tongro2025/Mistseeker-desktop/releases/latest)
 
-[![Download macOS](https://img.shields.io/badge/Download-macOS-blue?style=for-the-badge&logo=apple)](https://github.com/tongro2025/Mistseeker-desktop/releases/latest/download/MistSeeker-Desktop-1.0.0.dmg)
-[![Download Windows](https://img.shields.io/badge/Download-Windows-blue?style=for-the-badge&logo=windows)](https://github.com/tongro2025/Mistseeker-desktop/releases/latest/download/MistSeeker-Desktop-Setup-1.0.0.exe)
-[![Download Linux](https://img.shields.io/badge/Download-Linux-blue?style=for-the-badge&logo=linux)](https://github.com/tongro2025/Mistseeker-desktop/releases/latest/download/MistSeeker-Desktop-1.0.0.AppImage)
+Visit the [Releases page](https://github.com/tongro2025/Mistseeker-desktop/releases) to download the installer for your platform:
+- **macOS**: `.dmg` file
+- **Windows**: `.exe` installer
+- **Linux**: `.AppImage` file
 
-Or visit the [Releases page](https://github.com/tongro2025/Mistseeker-desktop/releases) to see all available versions.
+> **Note**: If you see a 404 error or "No releases found", create your first release by running:
+> ```bash
+> git tag v1.0.0
+> git push origin v1.0.0
+> ```
+> This will trigger GitHub Actions to automatically build and publish the release for all platforms.
 
 ## Prerequisites
 
