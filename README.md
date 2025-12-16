@@ -33,6 +33,18 @@ MistSeeker Desktop is **NOT** a code analysis engine itself. It is a desktop app
 
 **Important**: The actual analysis logic lives ONLY inside the Docker image. This desktop app never reimplements analysis logic - it only executes Docker commands and visualizes results.
 
+## Download
+
+### 🚀 Quick Download
+
+Click the button below to download the latest release for your platform:
+
+[![Download macOS](https://img.shields.io/badge/Download-macOS-blue?style=for-the-badge&logo=apple)](https://github.com/tongro2025/Mistseeker-desktop/releases/latest/download/MistSeeker-Desktop-1.0.0.dmg)
+[![Download Windows](https://img.shields.io/badge/Download-Windows-blue?style=for-the-badge&logo=windows)](https://github.com/tongro2025/Mistseeker-desktop/releases/latest/download/MistSeeker-Desktop-Setup-1.0.0.exe)
+[![Download Linux](https://img.shields.io/badge/Download-Linux-blue?style=for-the-badge&logo=linux)](https://github.com/tongro2025/Mistseeker-desktop/releases/latest/download/MistSeeker-Desktop-1.0.0.AppImage)
+
+Or visit the [Releases page](https://github.com/tongro2025/Mistseeker-desktop/releases) to see all available versions.
+
 ## Prerequisites
 
 - **Node.js** 18+ and npm (development only)
@@ -75,6 +87,23 @@ This will:
 
 ## Building for Production
 
+### Automatic Build (Recommended)
+
+The project includes GitHub Actions that automatically build and release when you create a git tag:
+
+1. Create a version tag:
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+2. GitHub Actions will automatically:
+   - Build for macOS, Windows, and Linux
+   - Create a GitHub Release
+   - Upload the installers
+
+### Manual Build
+
 Build the application for your platform:
 
 ```bash
@@ -90,6 +119,22 @@ The output will be in the `release/` directory:
 - **macOS**: DMG file
 - **Windows**: NSIS installer
 - **Linux**: AppImage
+
+### Publishing to GitHub Releases
+
+To publish manually:
+
+1. Build the application:
+```bash
+npm run build
+```
+
+2. Create a GitHub Release and upload the files from the `release/` directory
+
+Or use electron-builder's publish feature (requires `GH_TOKEN` environment variable):
+```bash
+GH_TOKEN=your_github_token npm run build -- --publish always
+```
 
 ## Usage
 

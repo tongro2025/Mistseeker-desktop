@@ -9,6 +9,7 @@
     "dev": "NODE_ENV=development concurrently \"npm run dev:react\" \"wait-on http://localhost:3000 && electron .\"",
     "dev:react": "vite",
     "build": "npm run build:main && npm run build:renderer && electron-builder",
+    "build:publish": "npm run build:main && npm run build:renderer && electron-builder --publish always",
     "build:main": "tsc -p tsconfig.main.json && npm run copy:main-files",
     "copy:main-files": "node -e \"const fs=require('fs');const path=require('path');if(fs.existsSync('dist/main/main.js')){fs.copyFileSync('dist/main/main.js','dist/main.js');fs.copyFileSync('dist/main/preload.js','dist/preload.js');if(fs.existsSync('dist/main/services')){if(!fs.existsSync('dist/services'))fs.mkdirSync('dist/services',{recursive:true});fs.readdirSync('dist/main/services').forEach(f=>{fs.copyFileSync(path.join('dist/main/services',f),path.join('dist/services',f));});}if(fs.existsSync('dist/main/shared')){if(!fs.existsSync('dist/shared'))fs.mkdirSync('dist/shared',{recursive:true});fs.readdirSync('dist/main/shared').forEach(f=>{fs.copyFileSync(path.join('dist/main/shared',f),path.join('dist/shared',f));});}}\"",
     "build:renderer": "vite build",
@@ -52,15 +53,27 @@
     "extraMetadata": {
       "main": "dist/main.js"
     },
+    "publish": {
+      "provider": "github",
+      "owner": "tongro2025",
+      "repo": "Mistseeker-desktop"
+    },
     "mac": {
       "category": "public.app-category.developer-tools",
-      "target": "dmg"
+      "target": "dmg",
+      "icon": "build/icon.icns"
     },
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "build/icon.ico"
     },
     "linux": {
-      "target": "AppImage"
+      "target": "AppImage",
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
     }
   }
 }
