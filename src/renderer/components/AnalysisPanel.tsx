@@ -12,17 +12,17 @@ const AnalysisPanel: React.FC<AnalysisPanelProps> = ({ analysisId, onStop }) => 
   const [progress, setProgress] = useState<string>('Initializing...');
   const logEndRef = useRef<HTMLDivElement>(null);
 
-  const loadLogs = async () => {
-    try {
-      const currentLogs = await window.electronAPI.getAnalysisLogs(analysisId);
-      setLogs(currentLogs);
-    } catch (error) {
-      console.error('Failed to load logs:', error);
-    }
-  };
-
   useEffect(() => {
     // Load initial logs
+    const loadLogs = async () => {
+      try {
+        const currentLogs = await window.electronAPI.getAnalysisLogs(analysisId);
+        setLogs(currentLogs);
+      } catch (error) {
+        console.error('Failed to load logs:', error);
+      }
+    };
+
     loadLogs();
 
     // Set up real-time log listener
@@ -45,7 +45,7 @@ const AnalysisPanel: React.FC<AnalysisPanelProps> = ({ analysisId, onStop }) => 
     return () => {
       window.electronAPI.removeAllListeners('analysis-log');
     };
-  }, [analysisId, loadLogs]);
+  }, [analysisId]);
 
   useEffect(() => {
     if (autoScroll && logEndRef.current) {
