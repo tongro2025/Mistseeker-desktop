@@ -15,10 +15,13 @@ jobs:
         include:
           - os: macos-latest
             platform: mac
+            extension: dmg
           - os: windows-latest
             platform: win
+            extension: exe
           - os: ubuntu-latest
             platform: linux
+            extension: AppImage
 
     steps:
       - name: Checkout code
@@ -38,25 +41,24 @@ jobs:
 
       - name: Build Electron app
         run: npm run build
-        # Build without publish - we'll publish all files together
         continue-on-error: false
 
-      - name: List release files
+      - name: List release directory
         run: |
-          echo "Release directory contents:"
-          ls -la release/ || echo "Release directory not found"
-          find release -type f || echo "No files found in release"
+          echo "=== Release directory contents ==="
+          ls -lah release/ || echo "Release directory does not exist"
+          find release -type f -name "*.${{ matrix.extension }}" || echo "No ${{ matrix.extension }} files found"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.platform }}-build
+          name: ${{ matrix.platform }}-${{ matrix.extension }}
           path: |
+            release/*.${{ matrix.extension }}
             release/*.dmg
             release/*.exe
             release/*.AppImage
-            release/*.zip
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 30
 
   release:
@@ -73,56 +75,63 @@ jobs:
         with:
           path: artifacts
 
-      - name: List downloaded files
+      - name: List all downloaded files
         run: |
-          echo "Artifacts structure:"
-          find artifacts -type f -o -type d || true
-          echo "---"
-          ls -la artifacts/ || true
-          echo "---"
-          for dir in artifacts/*/; do
-            echo "Directory: $dir"
-            ls -la "$dir" || true
-          done
+          echo "=== All artifacts ==="
+          find artifacts -type f || echo "No files found"
+          echo ""
+          echo "=== Directory structure ==="
+          find artifacts -type d || true
+          echo ""
+          echo "=== Files by type ==="
+          find artifacts -name "*.dmg" || echo "No .dmg files"
+          find artifacts -name "*.exe" || echo "No .exe files"
+          find artifacts -name "*.AppImage" || echo "No .AppImage files"
 
       - name: Extract version from tag
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
-      - name: Find release files
-        id: find_files
+      - name: Find and copy release files
+        id: prepare_files
         run: |
-          echo "Finding release files..."
-          # Search in all subdirectories
-          MAC_FILE=$(find artifacts -name "*.dmg" -type f 2>/dev/null | head -1 || echo "")
-          WIN_FILE=$(find artifacts -name "*.exe" -type f 2>/dev/null | head -1 || echo "")
-          LINUX_FILE=$(find artifacts -name "*.AppImage" -type f 2>/dev/null | head -1 || echo "")
+          mkdir -p release_files
           
-          # If not found, try in subdirectories
-          if [ -z "$MAC_FILE" ]; then
-            MAC_FILE=$(find artifacts -path "*/release/*.dmg" -type f 2>/dev/null | head -1 || echo "")
-          fi
-          if [ -z "$WIN_FILE" ]; then
-            WIN_FILE=$(find artifacts -path "*/release/*.exe" -type f 2>/dev/null | head -1 || echo "")
-          fi
-          if [ -z "$LINUX_FILE" ]; then
-            LINUX_FILE=$(find artifacts -path "*/release/*.AppImage" -type f 2>/dev/null | head -1 || echo "")
+          # Find and copy files
+          MAC_FILE=$(find artifacts -name "*.dmg" -type f | head -1)
+          WIN_FILE=$(find artifacts -name "*.exe" -type f | head -1)
+          LINUX_FILE=$(find artifacts -name "*.AppImage" -type f | head -1)
+          
+          if [ -n "$MAC_FILE" ]; then
+            cp "$MAC_FILE" release_files/
+            echo "mac_file=release_files/$(basename "$MAC_FILE")" >> $GITHUB_OUTPUT
+            echo "Found macOS file: $MAC_FILE"
+          else
+            echo "mac_file=" >> $GITHUB_OUTPUT
+            echo "WARNING: No macOS file found"
           fi
           
-          echo "mac_file=$MAC_FILE" >> $GITHUB_OUTPUT
-          echo "win_file=$WIN_FILE" >> $GITHUB_OUTPUT
-          echo "linux_file=$LINUX_FILE" >> $GITHUB_OUTPUT
-          
-          echo "Found files:"
-          echo "  macOS: $MAC_FILE"
-          echo "  Windows: $WIN_FILE"
-          echo "  Linux: $LINUX_FILE"
-          
-          # Fail if no files found
-          if [ -z "$MAC_FILE" ] && [ -z "$WIN_FILE" ] && [ -z "$LINUX_FILE" ]; then
-            echo "ERROR: No release files found!"
-            exit 1
+          if [ -n "$WIN_FILE" ]; then
+            cp "$WIN_FILE" release_files/
+            echo "win_file=release_files/$(basename "$WIN_FILE")" >> $GITHUB_OUTPUT
+            echo "Found Windows file: $WIN_FILE"
+          else
+            echo "win_file=" >> $GITHUB_OUTPUT
+            echo "WARNING: No Windows file found"
           fi
+          
+          if [ -n "$LINUX_FILE" ]; then
+            cp "$LINUX_FILE" release_files/
+            echo "linux_file=release_files/$(basename "$LINUX_FILE")" >> $GITHUB_OUTPUT
+            echo "Found Linux file: $LINUX_FILE"
+          else
+            echo "linux_file=" >> $GITHUB_OUTPUT
+            echo "WARNING: No Linux file found"
+          fi
+          
+          echo ""
+          echo "=== Files in release_files directory ==="
+          ls -lah release_files/ || echo "No files copied"
 
       - name: Create ZIP archive
         id: create_zip
@@ -130,90 +139,49 @@ jobs:
           VERSION=${{ steps.get_version.outputs.VERSION }}
           ZIP_NAME="MistSeeker-Desktop-${VERSION}-all-platforms.zip"
           
-          # Create a temporary directory for the zip
-          mkdir -p zip_contents
-          
-          FILE_COUNT=0
-          
-          # Copy all platform files
-          if [ -n "${{ steps.find_files.outputs.mac_file }}" ] && [ -f "${{ steps.find_files.outputs.mac_file }}" ]; then
-            cp "${{ steps.find_files.outputs.mac_file }}" zip_contents/
-            FILE_COUNT=$((FILE_COUNT + 1))
-            echo "Added macOS file"
-          fi
-          if [ -n "${{ steps.find_files.outputs.win_file }}" ] && [ -f "${{ steps.find_files.outputs.win_file }}" ]; then
-            cp "${{ steps.find_files.outputs.win_file }}" zip_contents/
-            FILE_COUNT=$((FILE_COUNT + 1))
-            echo "Added Windows file"
-          fi
-          if [ -n "${{ steps.find_files.outputs.linux_file }}" ] && [ -f "${{ steps.find_files.outputs.linux_file }}" ]; then
-            cp "${{ steps.find_files.outputs.linux_file }}" zip_contents/
-            FILE_COUNT=$((FILE_COUNT + 1))
-            echo "Added Linux file"
-          fi
-          
-          if [ $FILE_COUNT -eq 0 ]; then
-            echo "WARNING: No files to add to ZIP"
-          fi
-          
-          # Create README in zip
-          cat > zip_contents/README.txt << EOF
-MistSeeker Desktop ${VERSION} - All Platforms
-
-This archive contains installers for all supported platforms:
-
-- macOS: MistSeeker Desktop-${VERSION}.dmg
-- Windows: MistSeeker Desktop Setup ${VERSION}.exe
-- Linux: MistSeeker Desktop-${VERSION}.AppImage
-
-Installation:
-- macOS: Open the .dmg file and drag the app to Applications
-- Windows: Run the .exe installer
-- Linux: Make the .AppImage executable (chmod +x) and run it
-
-For more information, visit:
-https://github.com/tongro2025/Mistseeker-desktop
-EOF
-          
-          # Create the zip file
-          cd zip_contents
-          if [ $FILE_COUNT -gt 0 ]; then
-            zip -r "../${ZIP_NAME}" . || echo "ZIP creation failed"
+          if [ -d release_files ] && [ "$(ls -A release_files)" ]; then
+            cd release_files
+            zip -r "../${ZIP_NAME}" .
+            cd ..
+            echo "zip_file=${ZIP_NAME}" >> $GITHUB_OUTPUT
+            echo "Created ${ZIP_NAME}"
           else
-            echo "Skipping ZIP creation - no files"
-            ZIP_NAME=""
+            echo "zip_file=" >> $GITHUB_OUTPUT
+            echo "WARNING: No files to zip"
           fi
-          cd ..
-          
-          echo "zip_file=${ZIP_NAME}" >> $GITHUB_OUTPUT
-          echo "Created ${ZIP_NAME} (${FILE_COUNT} files)"
 
-      - name: Verify files exist
+      - name: Prepare release files list
+        id: prepare_release
         run: |
-          echo "Verifying files exist..."
-          if [ -n "${{ steps.find_files.outputs.mac_file }}" ]; then
-            ls -lh "${{ steps.find_files.outputs.mac_file }}" || echo "macOS file not found"
+          FILES=""
+          if [ -n "${{ steps.prepare_files.outputs.mac_file }}" ] && [ -f "${{ steps.prepare_files.outputs.mac_file }}" ]; then
+            FILES="${FILES}${{ steps.prepare_files.outputs.mac_file }}\n"
           fi
-          if [ -n "${{ steps.find_files.outputs.win_file }}" ]; then
-            ls -lh "${{ steps.find_files.outputs.win_file }}" || echo "Windows file not found"
+          if [ -n "${{ steps.prepare_files.outputs.win_file }}" ] && [ -f "${{ steps.prepare_files.outputs.win_file }}" ]; then
+            FILES="${FILES}${{ steps.prepare_files.outputs.win_file }}\n"
           fi
-          if [ -n "${{ steps.find_files.outputs.linux_file }}" ]; then
-            ls -lh "${{ steps.find_files.outputs.linux_file }}" || echo "Linux file not found"
+          if [ -n "${{ steps.prepare_files.outputs.linux_file }}" ] && [ -f "${{ steps.prepare_files.outputs.linux_file }}" ]; then
+            FILES="${FILES}${{ steps.prepare_files.outputs.linux_file }}\n"
           fi
-          if [ -n "${{ steps.create_zip.outputs.zip_file }}" ]; then
-            ls -lh "${{ steps.create_zip.outputs.zip_file }}" || echo "ZIP file not found"
+          if [ -n "${{ steps.create_zip.outputs.zip_file }}" ] && [ -f "${{ steps.create_zip.outputs.zip_file }}" ]; then
+            FILES="${FILES}${{ steps.create_zip.outputs.zip_file }}\n"
           fi
+          
+          echo "Files to upload:"
+          echo -e "$FILES"
+          
+          # Remove trailing newline and save
+          echo -e "$FILES" | sed '/^$/d' > release_files_list.txt
+          
+          echo "=== Release files list ==="
+          cat release_files_list.txt
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.get_version.outputs.VERSION }}
           name: Release ${{ steps.get_version.outputs.VERSION }}
-          files: |
-            ${{ steps.find_files.outputs.mac_file }}
-            ${{ steps.find_files.outputs.win_file }}
-            ${{ steps.find_files.outputs.linux_file }}
-            ${{ steps.create_zip.outputs.zip_file }}
+          files: release_files_list.txt
           draft: false
           prerelease: false
           fail_on_unmatched_files: false
