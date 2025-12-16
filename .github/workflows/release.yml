@@ -37,28 +37,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build TypeScript and React
-        run: |
-          echo "Building main process..."
-          npm run build:main
-          echo "Building renderer process..."
-          npm run build:renderer
-          echo "Build completed successfully"
-
-      - name: Verify build output
-        run: |
-          echo "=== Checking dist directory ==="
-          ls -lah dist/ || echo "dist/ directory not found"
-          echo ""
-          echo "=== Checking dist/main ==="
-          ls -lah dist/main/ || echo "dist/main/ not found"
-          echo ""
-          echo "=== Checking dist/renderer ==="
-          ls -lah dist/renderer/ || echo "dist/renderer/ not found"
-          echo ""
-          echo "=== Checking for main.js ==="
-          find dist -name "main.js" -o -name "main.js.map" || echo "main.js not found"
-
       - name: Install system dependencies (Linux only)
         if: matrix.os == 'ubuntu-latest'
         run: |
@@ -77,10 +55,45 @@ jobs:
             libpango1.0-dev \
             libcairo2-dev
 
+      - name: Build application
+        run: |
+          echo "Building main process..."
+          npm run build:main || exit 1
+          echo "Building renderer process..."
+          npm run build:renderer || exit 1
+          echo "Build completed successfully"
+
+      - name: Verify build output
+        run: |
+          echo "=== Checking dist directory ==="
+          ls -lah dist/ || echo "dist/ directory not found"
+          echo ""
+          echo "=== Checking dist/main ==="
+          ls -lah dist/main/ || echo "dist/main/ not found"
+          echo ""
+          echo "=== Checking dist/renderer ==="
+          ls -lah dist/renderer/ || echo "dist/renderer/ not found"
+          echo ""
+          echo "=== Checking for main.js ==="
+          find dist -name "main.js" || echo "main.js not found"
+          echo ""
+          echo "=== Checking for index.html ==="
+          find dist -name "index.html" || echo "index.html not found"
+
       - name: Build Electron app
         run: |
           echo "Starting electron-builder for ${{ matrix.platform }}..."
-          # Build for current platform only using electron-builder CLI
+          # Remove publish config to prevent auto-publish
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            if (pkg.build && pkg.build.publish) {
+              delete pkg.build.publish;
+              fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+              console.log('Removed publish config');
+            }
+          "
+          # Build for current platform only
           if [ "${{ matrix.platform }}" == "mac" ]; then
             npx electron-builder --mac
           elif [ "${{ matrix.platform }}" == "win" ]; then
