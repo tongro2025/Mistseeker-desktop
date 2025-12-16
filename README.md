@@ -39,17 +39,21 @@ MistSeeker Desktop is **NOT** a code analysis engine itself. It is a desktop app
 
 [![Download Latest Release](https://img.shields.io/badge/Download-Latest_Release-blue?style=for-the-badge)](https://github.com/tongro2025/Mistseeker-desktop/releases/latest)
 
-Visit the [Releases page](https://github.com/tongro2025/Mistseeker-desktop/releases) to download the installer for your platform:
-- **macOS**: `.dmg` file
-- **Windows**: `.exe` installer
-- **Linux**: `.AppImage` file
+Visit the [Releases page](https://github.com/tongro2025/Mistseeker-desktop/releases) to download the installer for your platform.
 
-> **Note**: If you see a 404 error or "No releases found", create your first release by running:
-> ```bash
-> git tag v1.0.0
-> git push origin v1.0.0
-> ```
-> This will trigger GitHub Actions to automatically build and publish the release for all platforms.
+**Available platforms:**
+- **macOS**: `MistSeeker Desktop-1.0.0.dmg` (DMG installer)
+- **Windows**: `MistSeeker Desktop Setup 1.0.0.exe` (NSIS installer) 
+- **Linux**: `MistSeeker Desktop-1.0.0.AppImage` (AppImage)
+
+> **Note**: If you see a 404 error or "No releases found":
+> 
+> 1. **Automatic**: Wait for GitHub Actions to build (triggered by tag push)
+> 2. **Manual**: Build locally and upload to [GitHub Releases](https://github.com/tongro2025/Mistseeker-desktop/releases/new)
+>    ```bash
+>    npm run build
+>    # Then upload files from release/ folder
+>    ```
 
 ## Prerequisites
 

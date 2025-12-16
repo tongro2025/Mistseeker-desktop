@@ -61,9 +61,32 @@ jobs:
         with:
           path: artifacts
 
+      - name: List downloaded files
+        run: |
+          echo "Artifacts structure:"
+          find artifacts -type f || true
+          ls -la artifacts/ || true
+
       - name: Extract version from tag
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Find release files
+        id: find_files
+        run: |
+          echo "Finding release files..."
+          MAC_FILE=$(find artifacts -name "*.dmg" -type f | head -1 || echo "")
+          WIN_FILE=$(find artifacts -name "*.exe" -type f | head -1 || echo "")
+          LINUX_FILE=$(find artifacts -name "*.AppImage" -type f | head -1 || echo "")
+          
+          echo "mac_file=$MAC_FILE" >> $GITHUB_OUTPUT
+          echo "win_file=$WIN_FILE" >> $GITHUB_OUTPUT
+          echo "linux_file=$LINUX_FILE" >> $GITHUB_OUTPUT
+          
+          echo "Found files:"
+          echo "  macOS: $MAC_FILE"
+          echo "  Windows: $WIN_FILE"
+          echo "  Linux: $LINUX_FILE"
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -71,10 +94,11 @@ jobs:
           tag_name: ${{ steps.get_version.outputs.VERSION }}
           name: Release ${{ steps.get_version.outputs.VERSION }}
           files: |
-            artifacts/mac-build/*
-            artifacts/win-build/*
-            artifacts/linux-build/*
+            ${{ steps.find_files.outputs.mac_file }}
+            ${{ steps.find_files.outputs.win_file }}
+            ${{ steps.find_files.outputs.linux_file }}
           draft: false
           prerelease: false
+          fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
