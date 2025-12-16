@@ -123,9 +123,11 @@ export class LicenseService {
         };
       }
 
+      const errorObj = error as { response?: { data?: { error?: string } }; message?: string };
+      const errorMessage = errorObj.response?.data?.error || errorObj.message || 'Failed to register license';
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Failed to register license',
+        error: errorMessage,
       };
     }
   }
