@@ -80,19 +80,41 @@ jobs:
           echo "=== Checking for index.html ==="
           find dist -name "index.html" || echo "index.html not found"
 
-      - name: Build Electron app
+      - name: Verify package.json main field
         run: |
-          echo "Starting electron-builder for ${{ matrix.platform }}..."
-          # Remove publish config to prevent auto-publish
+          echo "=== Checking package.json ==="
           node -e "
             const fs = require('fs');
             const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-            if (pkg.build && pkg.build.publish) {
-              delete pkg.build.publish;
-              fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
-              console.log('Removed publish config');
+            console.log('main field:', pkg.main);
+            console.log('build.extraMetadata.main:', pkg.build?.extraMetadata?.main);
+            if (pkg.main !== pkg.build?.extraMetadata?.main) {
+              console.log('WARNING: main fields do not match!');
             }
           "
+
+      - name: Build Electron app
+        run: |
+          echo "Starting electron-builder for ${{ matrix.platform }}..."
+          echo "Platform: ${{ matrix.platform }}"
+          echo "OS: ${{ matrix.os }}"
+          
+          # Verify dist files exist before building
+          if [ ! -f "dist/main.js" ]; then
+            echo "ERROR: dist/main.js not found!"
+            exit 1
+          fi
+          if [ ! -f "dist/preload.js" ]; then
+            echo "ERROR: dist/preload.js not found!"
+            exit 1
+          fi
+          if [ ! -d "dist/renderer" ]; then
+            echo "ERROR: dist/renderer directory not found!"
+            exit 1
+          fi
+          
+          echo "All required files exist, proceeding with build..."
+          
           # Build for current platform only
           if [ "${{ matrix.platform }}" == "mac" ]; then
             npx electron-builder --mac
@@ -100,8 +122,17 @@ jobs:
             npx electron-builder --win
           elif [ "${{ matrix.platform }}" == "linux" ]; then
             npx electron-builder --linux
+          else
+            echo "ERROR: Unknown platform: ${{ matrix.platform }}"
+            exit 1
           fi
-          echo "Build completed"
+          
+          if [ $? -eq 0 ]; then
+            echo "Build completed successfully"
+          else
+            echo "Build failed with exit code $?"
+            exit 1
+          fi
 
       - name: List release files
         run: |

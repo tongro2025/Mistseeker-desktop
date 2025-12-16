@@ -2,7 +2,7 @@
   "name": "mistseeker-desktop",
   "version": "1.0.0",
   "description": "MistSeeker Desktop - GUI launcher and orchestrator for MistSeeker Docker analysis",
-  "main": "dist/main/main.js",
+  "main": "dist/main.js",
   "author": "",
   "license": "MIT",
   "scripts": {
@@ -48,7 +48,10 @@
     },
     "files": [
       "dist/**/*",
-      "package.json"
+      "package.json",
+      "!dist/main/**",
+      "dist/main.js",
+      "dist/preload.js"
     ],
     "extraMetadata": {
       "main": "dist/main.js"
