@@ -114,7 +114,11 @@ export class LicenseService {
       }
     } catch (error: unknown) {
       console.error('Error registering license:', error);
-      const errorObj = error as { code?: string; message?: string };
+      const errorObj = error as { 
+        code?: string; 
+        message?: string; 
+        response?: { data?: { error?: string } };
+      };
       
       if (errorObj.code === 'ECONNREFUSED' || errorObj.code === 'ETIMEDOUT') {
         return {
@@ -123,7 +127,6 @@ export class LicenseService {
         };
       }
 
-      const errorObj = error as { response?: { data?: { error?: string } }; message?: string };
       const errorMessage = errorObj.response?.data?.error || errorObj.message || 'Failed to register license';
       return {
         success: false,
