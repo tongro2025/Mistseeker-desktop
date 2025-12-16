@@ -88,6 +88,52 @@ jobs:
           echo "  Windows: $WIN_FILE"
           echo "  Linux: $LINUX_FILE"
 
+      - name: Create ZIP archive
+        run: |
+          VERSION=${{ steps.get_version.outputs.VERSION }}
+          ZIP_NAME="MistSeeker-Desktop-${VERSION}-all-platforms.zip"
+          
+          # Create a temporary directory for the zip
+          mkdir -p zip_contents
+          
+          # Copy all platform files
+          if [ -n "${{ steps.find_files.outputs.mac_file }}" ]; then
+            cp "${{ steps.find_files.outputs.mac_file }}" zip_contents/
+          fi
+          if [ -n "${{ steps.find_files.outputs.win_file }}" ]; then
+            cp "${{ steps.find_files.outputs.win_file }}" zip_contents/
+          fi
+          if [ -n "${{ steps.find_files.outputs.linux_file }}" ]; then
+            cp "${{ steps.find_files.outputs.linux_file }}" zip_contents/
+          fi
+          
+          # Create README in zip
+          cat > zip_contents/README.txt << EOF
+MistSeeker Desktop ${VERSION} - All Platforms
+
+This archive contains installers for all supported platforms:
+
+- macOS: MistSeeker Desktop-${VERSION}.dmg
+- Windows: MistSeeker Desktop Setup ${VERSION}.exe
+- Linux: MistSeeker Desktop-${VERSION}.AppImage
+
+Installation:
+- macOS: Open the .dmg file and drag the app to Applications
+- Windows: Run the .exe installer
+- Linux: Make the .AppImage executable (chmod +x) and run it
+
+For more information, visit:
+https://github.com/tongro2025/Mistseeker-desktop
+EOF
+          
+          # Create the zip file
+          cd zip_contents
+          zip -r "../${ZIP_NAME}" .
+          cd ..
+          
+          echo "zip_file=${ZIP_NAME}" >> $GITHUB_OUTPUT
+          echo "Created ${ZIP_NAME}"
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
@@ -97,6 +143,7 @@ jobs:
             ${{ steps.find_files.outputs.mac_file }}
             ${{ steps.find_files.outputs.win_file }}
             ${{ steps.find_files.outputs.linux_file }}
+            ${{ steps.create_zip.outputs.zip_file }}
           draft: false
           prerelease: false
           fail_on_unmatched_files: false
