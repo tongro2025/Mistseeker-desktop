@@ -43,8 +43,9 @@ Visit the [Releases page](https://github.com/tongro2025/Mistseeker-desktop/relea
 
 **Available platforms:**
 - **macOS**: `MistSeeker Desktop-1.0.0.dmg` (DMG installer)
-- **Windows**: `MistSeeker Desktop Setup 1.0.0.exe` (NSIS installer) 
+- **Windows**: `MistSeeker Desktop-1.0.0.exe` (NSIS installer) 
 - **Linux**: `MistSeeker Desktop-1.0.0.AppImage` (AppImage)
+- **All Platforms**: `MistSeeker-Desktop-1.0.0-all-platforms.zip` (ZIP archive with all installers)
 
 > **Note**: If you see a 404 error or "No releases found":
 > 
